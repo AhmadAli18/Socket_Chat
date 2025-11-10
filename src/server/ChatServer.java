@@ -245,7 +245,6 @@ public class ChatServer{
         out.println("INFO   MSG <message>        - Broadcast message to all users");
         out.println("INFO   DM <user> <message>  - Send private message");
         out.println("INFO   WHO                  - List online users");
-        out.println("INFO   PING                 - Check connection");
         out.println("INFO   NAME <new_name>      - Change username");
         out.println("INFO   HELP                 - Show this help");
         out.println("INFO   QUIT                 - Exit chat");

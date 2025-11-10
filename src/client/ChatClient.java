@@ -84,7 +84,6 @@ public class ChatClient {
                 // Start ping thread to keep connection alive
                 Thread pingThread = startPingService(out);
                 
-                // Handle user input
                 handleUserInput(out, scanner, socket, receiveThread, pingThread);
                 
             } catch (SocketTimeoutException e) {
@@ -276,7 +275,6 @@ public class ChatClient {
         System.out.println("  DM <user> <message>  - Send private message");
         System.out.println("  WHO                  - List online users");
         System.out.println("  NAME <new_name>      - Change your username");
-        System.out.println("  PING                 - Check connection");
         System.out.println("  STATUS               - Show connection info");
         System.out.println("  CLEAR                - Clear screen");
         System.out.println("  HELP                 - Show this help");
