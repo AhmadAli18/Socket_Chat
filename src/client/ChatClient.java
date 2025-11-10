@@ -13,8 +13,8 @@ public class ChatClient {
     private static AtomicBoolean connected = new AtomicBoolean(false);
     private static AtomicBoolean reconnecting = new AtomicBoolean(false);
 
-    public static void main(String[] args) {
-        if (args.length < 2) {
+    public static void main(String[] args){
+        if(args.length < 2){
             System.out.println("Usage: java client.ChatClient <server_ip> <port>");
             System.out.println("Example: java client.ChatClient localhost 4000");
             return;
@@ -23,7 +23,7 @@ public class ChatClient {
         String serverIp = args[0];
         int port;
         
-        try {
+        try{
             port = Integer.parseInt(args[1]);
             if (port < 1 || port > 65535) {
                 throw new NumberFormatException();
@@ -51,16 +51,16 @@ public class ChatClient {
                 
             } catch (ConnectException e) {
                 attempt++;
-                System.out.println("❌ Connection failed: " + e.getMessage());
+                System.out.println(" Connection failed: " + e.getMessage());
                 if (attempt >= MAX_RECONNECT_ATTEMPTS) {
-                    System.out.println("💔 Failed to connect after " + MAX_RECONNECT_ATTEMPTS + " attempts. Giving up.");
+                    System.out.println(" Failed to connect after " + MAX_RECONNECT_ATTEMPTS + " attempts. Giving up.");
                 }
             } catch (InterruptedException e) {
-                System.out.println("⚠️  Reconnection interrupted");
+                System.out.println(" Reconnection interrupted");
                 Thread.currentThread().interrupt();
                 break;
             } catch (IOException e) {
-                System.out.println("❌ Connection error: " + e.getMessage());
+                System.out.println("Connection error: " + e.getMessage());
                 break;
             }
         }
@@ -68,21 +68,18 @@ public class ChatClient {
 
     private static void connectToServer(String serverIp, int port) throws IOException {
         Socket socket = new Socket();
-        
-        try {
-            // Set connection timeout
+        try{
             socket.connect(new InetSocketAddress(serverIp, port), CONNECTION_TIMEOUT);
-            socket.setSoTimeout(30000); // Set read timeout
+            socket.setSoTimeout(30000); 
             
             try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  Scanner scanner = new Scanner(System.in)) {
                 
                 connected.set(true);
-                System.out.println("✅ Connected to chat server at " + serverIp + ":" + port);
-                System.out.println("💡 Type 'HELP' for available commands");
-                
-                // Start message receiver thread
+                System.out.println("Connected to chat server at " + serverIp + ":" + port);
+                System.out.println("Type 'HELP' for available commands");
+            
                 Thread receiveThread = startMessageReceiver(in, socket);
                 // Start ping thread to keep connection alive
                 Thread pingThread = startPingService(out);
@@ -91,12 +88,13 @@ public class ChatClient {
                 handleUserInput(out, scanner, socket, receiveThread, pingThread);
                 
             } catch (SocketTimeoutException e) {
-                System.out.println("⏰ Connection timeout - server not responding");
+                System.out.println("Connection timeout - server not responding");
             }
             
-        } finally {
+        } 
+        finally{
             connected.set(false);
-            if (!socket.isClosed()) {
+            if(!socket.isClosed()){
                 socket.close();
             }
         }
@@ -104,25 +102,25 @@ public class ChatClient {
 
     private static Thread startMessageReceiver(BufferedReader in, Socket socket) {
         Thread receiveThread = new Thread(() -> {
-            try {
+            try{
                 String msg;
                 while (connected.get() && (msg = in.readLine()) != null) {
                     displayFormattedMessage(msg);
                     
                     // Check for server shutdown message
                     if (msg.contains("Server is shutting down")) {
-                        System.out.println("🔴 Server is shutting down. Disconnecting...");
+                        System.out.println("Server is shutting down. Disconnecting...");
                         connected.set(false);
                         break;
                     }
                 }
             } catch (SocketTimeoutException e) {
                 if (connected.get()) {
-                    System.out.println("⏰ Server timeout - no response received");
+                    System.out.println("Server timeout - no response received");
                 }
             } catch (IOException e) {
                 if (connected.get() && !e.getMessage().toLowerCase().contains("socket closed")) {
-                    System.out.println("📡 Connection to server lost: " + e.getMessage());
+                    System.out.println("Connection to server lost: " + e.getMessage());
                 }
             } finally {
                 connected.set(false);
@@ -156,20 +154,20 @@ public class ChatClient {
 
     private static void displayFormattedMessage(String msg) {
         if (msg.startsWith("DM from ")) {
-            System.out.println("📩 " + msg.substring(3));
+            System.out.println(msg.substring(3));
         } else if (msg.startsWith("INFO ")) {
             String infoMsg = msg.substring(5);
             if (infoMsg.contains("joined") || infoMsg.contains("left") || infoMsg.contains("is now known as")) {
-                System.out.println("👥 " + infoMsg);
+                System.out.println(" " + infoMsg);
             } else {
-                System.out.println("💡 " + infoMsg);
+                System.out.println(" " + infoMsg);
             }
         } else if (msg.startsWith("ERR ")) {
-            System.out.println("❌ " + msg.substring(4));
+            System.out.println(" " + msg.substring(4));
         } else if (msg.startsWith("MSG ")) {
-            System.out.println("💬 " + msg.substring(4));
+            System.out.println(" " + msg.substring(4));
         } else if (msg.startsWith("USER ")) {
-            System.out.println("   👤 " + msg.substring(5));
+            System.out.println("    " + msg.substring(5));
         } else if (msg.equals("PONG")) {
             // Silent handling of PONG responses
         } else {
@@ -181,52 +179,51 @@ public class ChatClient {
                                       Thread receiveThread, Thread pingThread) {
         printHelp();
         
-        while (connected.get() && scanner.hasNextLine()) {
-            try {
+        while(connected.get() && scanner.hasNextLine()){
+            try{
                 String input = scanner.nextLine().trim();
                 
-                if (input.isEmpty()) {
+                if (input.isEmpty()){
                     continue;
                 }
                 
-                if (input.equalsIgnoreCase("QUIT") || input.equalsIgnoreCase("EXIT")) {
+                if(input.equalsIgnoreCase("QUIT") || input.equalsIgnoreCase("EXIT")) {
                     handleQuitCommand(out);
                     break;
                 }
                 
-                if (input.equalsIgnoreCase("HELP")) {
+                if(input.equalsIgnoreCase("HELP")){
                     printHelp();
                     continue;
                 }
                 
-                if (input.equalsIgnoreCase("STATUS")) {
+                if(input.equalsIgnoreCase("STATUS")){
                     displayConnectionStatus(socket);
                     continue;
                 }
                 
-                if (input.equalsIgnoreCase("CLEAR")) {
+                if(input.equalsIgnoreCase("CLEAR")) {
                     clearScreen();
                     continue;
                 }
                 
                 // Validate message length before sending
                 if (input.length() > 1000) {
-                    System.out.println("❌ Message too long. Maximum 1000 characters allowed.");
+                    System.out.println(" Message too long. Maximum 1000 characters allowed.");
                     continue;
                 }
-                
-                // Send message to server
+        
                 out.println(input);
                 
                 // Check if socket is still connected
                 if (socket.isClosed() || !socket.isConnected() || out.checkError()) {
-                    System.out.println("⚠️  Connection lost while sending message.");
+                    System.out.println(" Connection lost while sending message.");
                     connected.set(false);
                     break;
                 }
                 
             } catch (Exception e) {
-                System.out.println("⚠️  Input error: " + e.getMessage());
+                System.out.println(" Input error: " + e.getMessage());
                 break;
             }
         }
@@ -239,18 +236,18 @@ public class ChatClient {
     }
 
     private static void handleQuitCommand(PrintWriter out) {
-        System.out.println("👋 Disconnecting from chat...");
+        System.out.println("Disconnecting from chat...");
         out.println("QUIT");
         connected.set(false);
     }
 
     private static void displayConnectionStatus(Socket socket) {
         if (socket.isConnected() && !socket.isClosed()) {
-            System.out.println("✅ Connection status: Connected");
+            System.out.println("Connection status: Connected");
             System.out.println("   Server: " + socket.getInetAddress() + ":" + socket.getPort());
             System.out.println("   Local: " + socket.getLocalAddress() + ":" + socket.getLocalPort());
         } else {
-            System.out.println("❌ Connection status: Disconnected");
+            System.out.println("Connection status: Disconnected");
         }
     }
 
@@ -263,9 +260,9 @@ public class ChatClient {
             }
             System.out.println("Chat Client - Screen cleared");
             System.out.println("Type 'HELP' for available commands");
-        } catch (Exception e) {
-            // Fallback: print some newlines
-            for (int i = 0; i < 50; i++) {
+        } 
+        catch(Exception e){
+            for(int i = 0; i < 50; i++){
                 System.out.println();
             }
             System.out.println("Chat Client");
@@ -273,8 +270,8 @@ public class ChatClient {
         }
     }
 
-    private static void printHelp() {
-        System.out.println("\n📋 Available Commands:");
+    private static void printHelp(){
+        System.out.println("\n Available Commands:");
         System.out.println("  MSG <message>        - Send message to all users");
         System.out.println("  DM <user> <message>  - Send private message");
         System.out.println("  WHO                  - List online users");
@@ -287,15 +284,17 @@ public class ChatClient {
         System.out.println();
     }
 
-    private static void attemptReconnection(String serverIp, int port) {
-        if (reconnecting.compareAndSet(false, true)) {
-            try {
+    private static void attemptReconnection(String serverIp, int port){
+        if(reconnecting.compareAndSet(false, true)){
+            try{
                 System.out.println("Attempting to reconnect...");
                 Thread.sleep(RECONNECT_DELAY);
                 connectToServer(serverIp, port);
-            } catch (Exception e) {
+            } 
+            catch (Exception e){
                 System.out.println("Reconnection failed: " + e.getMessage());
-            } finally {
+            } 
+            finally{
                 reconnecting.set(false);
             }
         }
